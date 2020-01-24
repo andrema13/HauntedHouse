@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+group 'HuntedHouse'
+version '1.0'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+}
+
+dependencies {
+    //For testing purposes
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.0.0"
+
+    //Development libraries
+    implementation 'com.google.code.gson:gson:2.8.6'
+}
