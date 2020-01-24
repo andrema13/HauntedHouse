@@ -1,0 +1,74 @@
+{
+  "name": "friday 13",
+  "points": 100,
+  "map": [
+    {
+      "place": "hall",
+      "ghost": 0,
+      "connections": [
+        "entry",
+        "kitchen",
+        "office"
+      ]
+    },
+    {
+      "place": "kitchen",
+      "ghost": 15,
+      "connections": [
+        "hall",
+        "dining room"
+      ]
+    },
+    {
+      "place": "office",
+      "ghost": 0,
+      "connections": [
+        "hall",
+        "wc",
+        "bedroom"
+      ]
+    },
+    {
+      "place": "wc",
+      "ghost": 0,
+      "connections": [
+        "office"
+      ]
+    },
+    {
+      "place": "dining room",
+      "ghost": 0,
+      "connections": [
+        "kitchen",
+        "living room"
+      ]
+    },
+    {
+      "place": "living room",
+      "ghost": 15,
+      "connections": [
+        "exit",
+        "dining room",
+        "access"
+      ]
+    },
+    {
+      "place": "access",
+      "ghost": 0,
+      "connections": [
+        "exit",
+        "living room",
+        "bedroom"
+      ]
+    },
+    {
+      "place": "bedroom",
+      "ghost": 20,
+      "connections": [
+        "exit",
+        "office",
+        "access"
+      ]
+    }
+  ]
+} 
