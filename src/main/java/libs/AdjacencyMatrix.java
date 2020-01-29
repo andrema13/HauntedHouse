@@ -1,10 +1,14 @@
 package libs;
 
 import interfaces.GraphADT;
+import libs.ArrayUnorderedList;
+import libs.LinkedQueue;
+import libs.LinkedStack;
+
 import java.util.Iterator;
 
 /**
- * Graph represents an adjacency matrix implementation of a graph.
+ * libs.Graph represents an adjacency matrix implementation of a graph.
  */
 public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
     protected final int DEFAULT_CAPACITY = 20;
@@ -27,7 +31,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
      * @param index1 the first index
      * @param index2 the second index
      */
-    private void addEdge(int index1, int index2) {
+    public void addEdge(int index1, int index2) {
         if (indexIsValid(index1) && indexIsValid(index2)) {
             adjMatrix[index1][index2] = true;
             adjMatrix[index2][index1] = true;
@@ -58,7 +62,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
                 }
             }
         } catch (NullPointerException e) {
-            System.out.println("Graph is empty...");
+            System.out.println("libs.Graph is empty...");
         }
         return -1;
     }

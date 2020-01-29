@@ -25,7 +25,7 @@ public class LinkedStack<T> implements StackADT<T> {
     }
     //endregion
 
-    LinkedStack() {
+    public LinkedStack() {
         top = null;
         count = 0;
     }

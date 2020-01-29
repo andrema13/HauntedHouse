@@ -7,7 +7,7 @@ public class LinkedQueue<T> implements QueueADT<T> {
     private LinearNode<T> rear, front;
     private int count;
 
-    LinkedQueue() {
+    public LinkedQueue() {
         rear = null;
         front = null;
         count = 0;
