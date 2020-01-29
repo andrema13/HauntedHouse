@@ -5,7 +5,6 @@ public class Main {
 
     public static void main(String[] args) {
         mapGame = new MapGame<>();
-
         mapGame.readFromJSONFile("map.json");
         initGameScreen();
     }
@@ -113,11 +112,16 @@ public class Main {
                 break;
             case "2":
                 mapGame.changePointsPerDivisionByGameLevel(GameLevel.NORMAL);
+                //System.out.println(mapGame.toString());
+                mapGame.startingPoint(mapGame.getEntry());
+                initGameScreen();
                 break;
             case "3":
                 mapGame.changePointsPerDivisionByGameLevel(GameLevel.HARD);
+                break;
             case "0":
                 manualGameScreen(scanner);
+                break;
             default:
                 selectLevelScreen(scanner);
                 break;
@@ -130,7 +134,7 @@ public class Main {
         System.out.println("     Type your name:              ");
         String playerName = scanner.next();
         System.out.println("     *****************************");
-        mapGame.addNewPlayer(new Player(playerName, mapGame.getInitialPlayerPoints()));
+        mapGame.addNewPlayer(new Player(playerName, mapGame.getPlayerPoints()));
         manualGameScreen(scanner);
     }
 }
