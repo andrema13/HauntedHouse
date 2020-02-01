@@ -13,7 +13,7 @@ public class DoubleLinkedList<T>  implements ListADT<T> {
     private int count;
     private int modCount;
 
-    DoubleLinkedList() {
+    public DoubleLinkedList() {
         this.head = null;
         this.tail = null;
         this.count = 0;

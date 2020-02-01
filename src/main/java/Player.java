@@ -28,20 +28,18 @@ public class Player implements Comparable<Player> {
 
     @Override
     public String toString() {
-        return  "Name = " + this.name + "\t\t" +
+        return "Name = " + this.name + "\t\t" +
                 "Points = " + this.points + '\n';
     }
 
     @Override
     public int compareTo(Player o) {
-        
+
         int bestPlayer = this.points;
-        int result = 0;
+        int result = -1;
 
         if (o.getPoints() >= bestPlayer) {
             result = 1;
-        } else if (o.getPoints() < bestPlayer) {
-            result = -1;
         }
 
         return result;

@@ -58,14 +58,14 @@ public class Division implements Comparable<Division> {
         }
     }
 
-    protected void addConnection(Division division){
+    protected void addConnection(Division division) {
         this.connections.addToRear(division);
     }
 
-    protected void printConnections(){
+    protected void printConnections() {
 
         DoubleLinkedList<Division>.DoubleIterator iterator = this.connections.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             Division division = iterator.next();
             System.out.println(division.toString());
         }
@@ -73,12 +73,20 @@ public class Division implements Comparable<Division> {
 
     @Override
     public String toString() {
-        return "Id = " + this.id + "\t\t" + "Name = " + this.name + "\t\t" + "GhostPoints = " + this.ghostPoints + '\n';
+        return String.format("%-15s %-20s %-20s ", "ID = " +
+                this.id, "Name = " + this.name, "GhostPoints = " + this.ghostPoints);
     }
 
     @Override
     public int compareTo(Division o) {
-        //TODO
-        return 0;
+
+        int divisionWithMostGhostPoints = this.ghostPoints;
+        int result = -1;
+
+        if (o.getGhostPoints() >= divisionWithMostGhostPoints) {
+            result = 1;
+        }
+
+        return result;
     }
 }

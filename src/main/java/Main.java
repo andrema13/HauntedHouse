@@ -1,16 +1,18 @@
 import java.util.Scanner;
 
 public class Main {
-    private static MapGame<String> mapGame;
+    private MapGame<String> mapGame;
 
     public static void main(String[] args) {
-        mapGame = new MapGame<>();
-        mapGame.readFromJSONFile("map.json");
-        initGameScreen();
+        Main main = new Main();
+        main.initGame();
     }
 
-    private static void initGameScreen() {
+    protected void initGame() {
+
         Scanner scanner = new Scanner(System.in);
+        mapGame = new MapGame<>();
+        mapGame.readFromJSONFile("map.json");
         initialScreen(mapGame);//init the initial screen
 
         switch (scanner.next()) {
@@ -21,15 +23,16 @@ public class Main {
                 highScoresScreen();
                 break;
             case "0":
-                System.out.println("Program Closed");
+                System.out.println("MESSAGE: Program Closed");
                 break;
             default:
-                initGameScreen();
+                System.out.println("MESSAGE: Wrong choice. Pick a valid option!");
+                initGame();
                 break;
         }
     }
 
-    private static void initialScreen(MapGame<String> mapGame) {
+    private void initialScreen(MapGame<String> mapGame) {
         System.out.println("     *****************************");
         System.out.println("     " + mapGame.getName() + "\n  ");
         System.out.println("        1- Start New Game       ");
@@ -38,7 +41,7 @@ public class Main {
         System.out.println("     *****************************");
     }
 
-    private static void newGameScreen(Scanner scanner) {
+    private void newGameScreen(Scanner scanner) {
         System.out.println("     *****************************");
         System.out.println("     Select Mode:                \n");
         System.out.println("         1- Simulation Mode     ");
@@ -54,28 +57,29 @@ public class Main {
                 typeNameScreen(scanner);
                 break;
             case "0":
-                initGameScreen();
+                initGame();
             default:
+                System.out.println("MESSAGE: Wrong choice. Pick a valid option!");
                 newGameScreen(scanner);
                 break;
         }
     }
 
-    private static void highScoresScreen() {
+    private void highScoresScreen() {
         System.out.println("     *****************************");
         System.out.println("     HighScores                   ");
         System.out.println("     *****************************");
-        initGameScreen();
+        initGame();
     }
 
-    private static void simulationGameScreen() {
+    private void simulationGameScreen() {
         System.out.println("     *****************************");
         System.out.println("     Simulation Mode             \n");
         System.out.println("     *****************************");
-        initGameScreen();
+        initGame();
     }
 
-    private static void manualGameScreen(Scanner scanner) {
+    private void manualGameScreen(Scanner scanner) {
         System.out.println("     *****************************");
         System.out.println("     Manual Mode                 \n");
         System.out.println("         1- Select Level        \n");
@@ -90,12 +94,13 @@ public class Main {
                 newGameScreen(scanner);
                 break;
             default:
+                System.out.println("MESSAGE: Wrong choice. Pick a valid option!");
                 manualGameScreen(scanner);
                 break;
         }
     }
 
-    private static void selectLevelScreen(Scanner scanner) {
+    private void selectLevelScreen(Scanner scanner) {
         System.out.println("     *****************************");
         System.out.println("     Manual Mode                 \n");
         System.out.println("     Select Level:               \n");
@@ -109,32 +114,52 @@ public class Main {
         switch (scanner.next()) {
             case "1":
                 mapGame.changePointsPerDivisionByGameLevel(GameLevel.BASIC);
+                checkIfGameIsValid();
                 break;
             case "2":
                 mapGame.changePointsPerDivisionByGameLevel(GameLevel.NORMAL);
                 //System.out.println(mapGame.toString());
-                mapGame.startingPoint(mapGame.getEntry());
-                initGameScreen();
+                checkIfGameIsValid();
                 break;
             case "3":
                 mapGame.changePointsPerDivisionByGameLevel(GameLevel.HARD);
+                checkIfGameIsValid();
                 break;
             case "0":
                 manualGameScreen(scanner);
                 break;
             default:
+                System.out.println("MESSAGE: Wrong choice. Pick a valid option!");
                 selectLevelScreen(scanner);
                 break;
         }
     }
+    private void checkIfGameIsValid(){
+        if (mapGame.getPlayerPoints() <= 0) {
+            System.out.println("Player Points is lower or equals to 0");
+            initGame();
+        } else {
+            infoGameScreen(mapGame.getPlayersList().first(),mapGame.getGameLevel());
+            mapGame.startingPoint(mapGame.getEntry());
+        }
+    }
 
-    private static void typeNameScreen(Scanner scanner) {
+    private void typeNameScreen(Scanner scanner) {
         System.out.println("     *****************************");
-        System.out.println("     Manual Mode \n               ");
-        System.out.println("     Type your name:              ");
+        System.out.println("     Manual Mode ");
+        System.out.println("     Type your name: ");
         String playerName = scanner.next();
         System.out.println("     *****************************");
         mapGame.addNewPlayer(new Player(playerName, mapGame.getPlayerPoints()));
         manualGameScreen(scanner);
+    }
+
+    private void infoGameScreen(Player player, GameLevel gameLevel) {
+        System.out.println("     *****************************");
+        System.out.println("     Game Info : \n");
+        System.out.println("     Level: " + gameLevel.toString());
+        System.out.println("     Player Name: " + player.getName());
+        System.out.println("     Player Points: " + player.getPoints() + "\n");
+        System.out.println("     *****************************");
     }
 }

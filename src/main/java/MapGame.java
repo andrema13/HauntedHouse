@@ -16,7 +16,7 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
     private DoubleLinkedOrderedList<Player> playersList;
     private GameLevel gameLevel;
     private DoubleLinkedUnorderedList<Division> divisionsList;
-    private DoubleLinkedUnorderedList<Connection>[][] mapGameMatrix;
+    private DoubleLinkedUnorderedList<MapConnection>[][] mapGameMatrix;
     private int idConnection;
     private int divisionsId;
 
@@ -114,13 +114,13 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
         super.addVertex((T) division);
     }
 
-    public void addNewConnection(T origin, T destiny, Connection connection) {
+    public void addNewConnection(T origin, T destiny, MapConnection mapConnection) {
         super.addEdge(origin, destiny);
         int index1 = super.getIndex(origin);
         int index2 = super.getIndex(destiny);
         this.idConnection++;
-        connection.setId(this.idConnection);
-        this.mapGameMatrix[index1][index2].addToRear(connection);
+        mapConnection.setId(this.idConnection);
+        this.mapGameMatrix[index1][index2].addToRear(mapConnection);
       /*  System.out.println(connection.toString());
         System.out.println("Origin Division ->" + origin + "Destiny Division -> " + destiny);*/
     }
@@ -200,7 +200,7 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
                             divisionsId++;
                             addNewDivision(entry);//adds new vertex
                             addNewConnection((T) entry, (T) connectionDivision,
-                                    new Connection(connectionDivision.getGhostPoints()));
+                                    new MapConnection(connectionDivision.getGhostPoints()));
                             entry.addConnection(connectionDivision);
                         } else if (connections.get(j).getAsString().equals("exit") && !exitExistsInGraph) {
                             //just to add one vertex exit only one time
@@ -209,13 +209,13 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
                             this.divisionsId++;
                             addNewDivision(exit);//adds new vertex
                             addNewConnection((T) connectionDivision, (T) exit,
-                                    new Connection(exit.getGhostPoints()));
+                                    new MapConnection(exit.getGhostPoints()));
                             connectionDivision.addConnection(exit);
                             exitExistsInGraph = true;
                         } else if (connections.get(j).getAsString().equals("exit") && exitExistsInGraph) {
 
                             addNewConnection((T) connectionDivision, (T) exit,
-                                    new Connection(exit.getGhostPoints()));//TODO
+                                    new MapConnection(exit.getGhostPoints()));//TODO
                             connectionDivision.addConnection(exit);
                         } else {
                             DoubleLinkedList<Division>.DoubleIterator divisionsList = getDivisionsList().iterator();
@@ -223,7 +223,7 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
                                 Division tempDivision = divisionsList.next();
                                 if (tempDivision.getName().equals(connections.get(j).getAsString())) {
                                     addNewConnection((T) connectionDivision, (T) tempDivision,
-                                            new Connection(tempDivision.getGhostPoints()));
+                                            new MapConnection(tempDivision.getGhostPoints()));
                                     connectionDivision.addConnection(tempDivision);
                                     break;
                                 }
@@ -276,24 +276,28 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
 
         Scanner scanner = new Scanner(System.in);
         DoubleLinkedList<Division>.DoubleIterator iterator = getDivisionsList().iterator();
+        Player player = getPlayersList().first();
 
-        while (iterator.hasNext()) {
+        while (iterator.hasNext() && player.getPoints() > 0) {
             Division connectionDivision = iterator.next();//goes to the next division
-
             if (connectionDivision.equals(startingDivision)) {
-                System.out.println("Points: " + getPlayerPoints());
+
+                System.out.println("     *****************************");
+                System.out.println("     Player Points: " + player.getPoints() + "\n");//TODO meter nome do player aqui
+                System.out.println("Possible next Divisions :");
                 connectionDivision.printConnections();
-                System.out.println("Choose the next move: ");
+                System.out.println("\nChoose the next move: ");
                 int playerChoice = scanner.nextInt();
                 if (super.adjMatrix[startingDivision.getId()][playerChoice]) { //check if the connection exist
+                    player.setPoints(player.getPoints() - connectionDivision.getGhostPoints());
+                    System.out.println("     *****************************");
                     moveToAnotherDivision(playerChoice, connectionDivision);
-                    setPlayerPoints(getPlayerPoints() - connectionDivision.getGhostPoints());
-                    System.out.println("Points: " + getPlayerPoints());
+                    return;
                 } else {
-                    System.out.println("Wrong choice. Pick a valid connection!");
+                    System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
+                    System.out.println("     *****************************");
                     startingPoint(startingDivision);
                 }
-
             }
         }
     }
@@ -302,43 +306,97 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
 
         Scanner scanner = new Scanner(System.in);
         DoubleLinkedList<Division>.DoubleIterator iterator = getDivisionsList().iterator();
+        Player player = getPlayersList().first();
 
         while (iterator.hasNext()) {
             Division connectionDivision = iterator.next();//goes to the next division;
 
-            if (connectionDivision.getName().equals("exit")) {
+            if (connectionDivision.getName().equals("exit") && player.getPoints() > 0) {
                 if (super.adjMatrix[origin.getId()][connectionDivision.getId()]) {
-                    System.out.println("Finish Points: " + getPlayerPoints());
-                    System.out.println("Finish");
-                } else {
-                    System.out.println("Wrong choice. Pick a valid connection!");
+                    System.out.println("MESSAGE: You Won! Congratulations :)");
+                    finishScreen();
+                } else if (!super.adjMatrix[origin.getId()][connectionDivision.getId()]) {
+                    System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
                     startingPoint(origin);
+                } else {
+                    System.out.println("MESSAGE: Game Over! :(");
+                    gameOverScreen();
                 }
-                break;
-            }
-            if (connectionDivision.getId() == divisionId) {
+                return;
+
+            } else if (connectionDivision.getId() == divisionId && player.getPoints() > 0) {
                 if (super.adjMatrix[origin.getId()][connectionDivision.getId()]) {
-                    setPlayerPoints(getPlayerPoints() - connectionDivision.getGhostPoints());
-                    System.out.println("Points: " + getPlayerPoints());
-                    connectionDivision.printConnections();
-                    System.out.println("Choose the next move: ");
-                    int playerChoice = scanner.nextInt();
-                    moveToAnotherDivision(playerChoice, connectionDivision);
-                } else {
-                    System.out.println("Wrong choice. Pick a valid connection!");
+                    player.setPoints(player.getPoints() - connectionDivision.getGhostPoints());
+                    if (player.getPoints() > 0) {
+                        System.out.println("     Player Points: " + player.getPoints() + "\n");
+                        System.out.println("Possible next Divisions :");
+                        connectionDivision.printConnections();
+                        System.out.println("\nChoose the next move: ");
+                        int playerChoice = scanner.nextInt();
+                        System.out.println("     *****************************");
+                        moveToAnotherDivision(playerChoice, connectionDivision);
+                    } else {
+                        System.out.println("MESSAGE: Game Over! :(");
+                        gameOverScreen();
+                        return;
+                    }
+                } else if (!super.adjMatrix[origin.getId()][connectionDivision.getId()]) {
+                    System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
                     startingPoint(origin);
+                } else {
+                    System.out.println("MESSAGE: Game Over! :(");
+                    gameOverScreen();
                 }
-                break;
+                return;
+            } else if (player.getPoints() <= 0) {
+                System.out.println("MESSAGE: Game Over! :(");
+                gameOverScreen();
+                return;
             }
         }
     }
 
+    private void gameOverScreen() {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("     *****************************");
+        System.out.println("     Game Over  \n");
+        System.out.println("     Do you want to try Again ? ");
+        System.out.println("     1 - Yes ");
+        System.out.println("     2 - No  ");
+        switch (scanner.nextInt()) {
+            case 1:
+                Main main = new Main();
+                main.initGame();
+                break;
+            case 2:
+                System.out.println("MESSAGE: Program Closed");
+                break;
+            default:
+                System.out.println("MESSAGE: Wrong choice. Pick a valid option!");
+                gameOverScreen();
+                break;
+        }
+        System.out.println("     *****************************");
+    }
+
+    private void finishScreen() {
+        Main main = new Main();
+        System.out.println("     *****************************");
+        System.out.println("     Finished Game  \n");
+        System.out.println("     Level: " + getGameLevel().toString());
+        System.out.println("     Player Name: " + getPlayersList().first().getName());
+        System.out.println("     Player Points: " + getPlayersList().first().getPoints() + "\n");
+        System.out.println("     *****************************");
+        main.initGame();
+    }
+
     @Override
     public String toString() {
-        return " Name = " + name + "\n" +
-                " GameLevel = \t" + gameLevel + "\n" +
-                " PlayersList: \n" + playersList + "\n" +
-                " Divisions: \n" + divisionsList;
+        return " Name = " + this.name + "\n" +
+                " GameLevel = \t" + this.gameLevel + "\n" +
+                " PlayersList: \n" + this.playersList + "\n" +
+                " Divisions: \n" + this.divisionsList;
     }
 }
 
