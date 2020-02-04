@@ -1,60 +1,6 @@
 package libs;
 
 public class LinearNode<T> implements Comparable<LinearNode<T>> {
-
-    private String name;
-
-    private DoubleLinkedList<LinearNode<T>> shortestPath = new DoubleLinkedList<>();
-
-    private Integer ghostDivisionPoints = Integer.MAX_VALUE;
-
-    private MapConnection<T> adjacentConnections;
-
-    public void addConnection(LinearNode<T> destination, int ghostPoints) {
-        this.adjacentConnections = new MapConnection<>(destination, ghostPoints);
-    }
-
-    public LinearNode(String name) {
-        this.name = name;
-    }
-
-
-    //region get-set
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public DoubleLinkedList<LinearNode<T>> getShortestPath() {
-        return shortestPath;
-    }
-
-    public void setShortestPath(DoubleLinkedList<LinearNode<T>> shortestPath) {
-        this.shortestPath = shortestPath;
-    }
-
-    public MapConnection<T> getAdjacentConnections() {
-        return adjacentConnections;
-    }
-
-    public void setAdjacentConnections(MapConnection<T> adjacentConnections) {
-        this.adjacentConnections = adjacentConnections;
-    }
-
-    public Integer getGhostDivisionPoints() {
-        return ghostDivisionPoints;
-    }
-
-    public void setGhostDivisionPoints(Integer ghostDivisionPoints) {
-        this.ghostDivisionPoints = ghostDivisionPoints;
-    }
-
-    //endregion
-
     /**
      * reference to next node in list
      */
@@ -78,7 +24,7 @@ public class LinearNode<T> implements Comparable<LinearNode<T>> {
      *
      * @param elem element to be stored
      */
-    LinearNode(T elem) {
+    public LinearNode(T elem) {
         next = null;
         element = elem;
     }
@@ -106,7 +52,7 @@ public class LinearNode<T> implements Comparable<LinearNode<T>> {
      *
      * @return T element stored at this node
      */
-    T getElement() {
+    public T getElement() {
         return element;
     }
 

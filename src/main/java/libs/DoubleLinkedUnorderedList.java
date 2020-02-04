@@ -70,15 +70,14 @@ public class DoubleLinkedUnorderedList<T extends Comparable<T>> extends DoubleLi
                 boolean inserted = false;
                 while (current != null && !inserted) {
 
-                    if (target.compareTo(current.getElement()) == 0 ) {
+                    if (target.compareTo(current.getElement()) == 0) {
 
-                        if(current.getNext() == null){
+                        if (current.getNext() == null) {
                             current.setNext(doubleNode);
                             doubleNode.setNext(null);
                             doubleNode.setPrevious(current);
                             setTail(doubleNode);
-                        }
-                        else {
+                        } else {
                             tempNode = current.getNext();
                             current.setNext(doubleNode);
                             doubleNode.setNext(tempNode);

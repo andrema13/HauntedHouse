@@ -7,6 +7,11 @@ public class LinkedStack<T> implements StackADT<T> {
     private LinearNode<T> top;
     private int count;
 
+    public LinkedStack() {
+        top = null;
+        count = 0;
+    }
+
     //region get-set
     public LinearNode<T> getTop() {
         return top;
@@ -19,15 +24,10 @@ public class LinkedStack<T> implements StackADT<T> {
     public int getCount() {
         return count;
     }
+    //endregion
 
     public void setCount(int count) {
         this.count = count;
-    }
-    //endregion
-
-    public LinkedStack() {
-        top = null;
-        count = 0;
     }
 
     @Override

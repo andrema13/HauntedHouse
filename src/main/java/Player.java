@@ -1,7 +1,7 @@
 public class Player implements Comparable<Player> {
 
     private String name;
-    private int points;
+    private double points;
 
     Player(String playerName, int playerPoints) {
         this.points = playerPoints;
@@ -17,11 +17,11 @@ public class Player implements Comparable<Player> {
         this.name = name;
     }
 
-    public int getPoints() {
-        return points;
+    public double getPoints() {
+        return this.points;
     }
 
-    public void setPoints(int points) {
+    public void setPoints(double points) {
         this.points = points;
     }
     //endregion
@@ -35,7 +35,7 @@ public class Player implements Comparable<Player> {
     @Override
     public int compareTo(Player o) {
 
-        int bestPlayer = this.points;
+        double bestPlayer = this.points;
         int result = -1;
 
         if (o.getPoints() >= bestPlayer) {

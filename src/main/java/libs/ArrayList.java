@@ -8,16 +8,16 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class ArrayList<T extends Comparable<T>> implements ListADT<T> {
+public class ArrayList<T> implements ListADT<T> {
 
-    private T[] list;
     private static final int DEFAULT_CAPACITY = 50;
+    private T[] list;
     private int length;
     private Iterator<T> itr;
     private int modCount;
 
     ArrayList() {
-        this.list = (T[]) new Comparable[DEFAULT_CAPACITY];
+        this.list = (T[]) new Object[DEFAULT_CAPACITY];
         this.length = 0;
         this.modCount = 0;
     }
@@ -181,6 +181,14 @@ public class ArrayList<T extends Comparable<T>> implements ListADT<T> {
         return String.valueOf(stringBuilder);
     }
 
+    protected void increaseModCount() {
+        setModCount(getModCount() + 1);
+    }
+
+    protected void increaseLength() {
+        setLength(getLength() + 1);
+    }
+
     private class BasicIterator implements Iterator {
 
         private T[] list;
@@ -224,13 +232,5 @@ public class ArrayList<T extends Comparable<T>> implements ListADT<T> {
                 e.printStackTrace();
             }
         }
-    }
-
-    protected void increaseModCount() {
-        setModCount(getModCount() + 1);
-    }
-
-    protected void increaseLength() {
-        setLength(getLength() + 1);
     }
 }
