@@ -1,42 +1,60 @@
 package libs;
 
 import interfaces.GraphADT;
-import libs.ArrayUnorderedList;
-import libs.LinkedQueue;
-import libs.LinkedStack;
 
 import java.util.Iterator;
 
 /**
  * libs.Graph represents an adjacency matrix implementation of a graph.
  */
-public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
+public class Graph<T> implements GraphADT<T> {
     protected final int DEFAULT_CAPACITY = 20;
     protected int numVertices; // number of vertices in the graph
     protected boolean[][] adjMatrix; // adjacency matrix
-    protected Comparable<T>[] vertices; // values of vertices
+    protected T[] vertices; // values of vertices
 
     /**
      * Creates an empty graph.
      */
-    public AdjacencyMatrix() {
+    @SuppressWarnings("unchecked")
+    public Graph() {
         numVertices = 0;
         this.adjMatrix = new boolean[DEFAULT_CAPACITY][DEFAULT_CAPACITY];
-        this.vertices = new Comparable[DEFAULT_CAPACITY];
+        this.vertices = (T[]) new Object[DEFAULT_CAPACITY];
     }
+
+    //region get-set
+    public int getNumVertices() {
+        return numVertices;
+    }
+
+    public void setNumVertices(int numVertices) {
+        this.numVertices = numVertices;
+    }
+
+    public boolean[][] getAdjMatrix() {
+        return adjMatrix;
+    }
+
+    public T[] getVertices() {
+        return (T[]) vertices;
+    }
+
+    //endregion
 
     /**
      * Inserts an edge between two vertices of the graph.
      *
-     * @param index1 the first index
-     * @param index2 the second index
+     * @param sourceIndexId      the id of the first index
+     * @param destinationIndexId the id of the second index
      */
-    public void addEdge(int index1, int index2) {
-        if (indexIsValid(index1) && indexIsValid(index2)) {
-            adjMatrix[index1][index2] = true;
-            adjMatrix[index2][index1] = true;
+    private void addEdge(int sourceIndexId, int destinationIndexId) {
+        if (indexIsValid(sourceIndexId) && indexIsValid(destinationIndexId)) {
+            adjMatrix[sourceIndexId][destinationIndexId] = true;
+            adjMatrix[destinationIndexId][sourceIndexId] = true;
         }
     }
+
     /**
      * Inserts an edge between two vertices of the graph.
      *
@@ -50,14 +68,15 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
     /**
      * Returns the index value of the first occurrence of the vertex.
      * Returns -1 if the key is not found.
-     * @param vertex1 to be tested
+     *
+     * @param vertex to be tested
      * @return an int
      */
-    public int getIndex(T vertex1) {
+    private int getIndex(T vertex) {
 
         try {
             for (int i = 0; i < vertices.length; i++) {
-                if (vertices[i].equals(vertex1)) {
+                if (vertices[i].equals(vertex)) {
                     return i;
                 }
             }
@@ -94,6 +113,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
     /**
      * Returns an iterator that performs a breadth first search
      * traversal starting at the given vertex.
+     *
      * @param startIndex start index to start the search
      * @return an iterator
      */
@@ -138,6 +158,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
     /**
      * Returns an iterator that performs a depth first search
      * traversal starting at the given index.
+     *
      * @param startIndex start index to start the search
      * @return an iterator
      */
@@ -186,6 +207,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
     /**
      * Returns an iterator that contains the shortest path between
      * the two vertices.
+     *
      * @param startVertex  the starting vertex
      * @param targetVertex the ending vertex
      * @return an iterator
@@ -211,7 +233,8 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
     /**
      * Returns an iterator that contains the indices of the vertices
      * that are in the shortest path between the two given vertices.
-     * @param startIndex initial vertex
+     *
+     * @param startIndex  initial vertex
      * @param targetIndex final vertex
      * @return an iterator
      */
@@ -280,6 +303,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
 
     /**
      * Returns true if the graph is empty and false otherwise.
+     *
      * @return a boolean
      */
     @Override
@@ -289,6 +313,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
 
     /**
      * Returns true if the graph is connected and false otherwise.
+     *
      * @return a boolean
      */
     @Override
@@ -315,6 +340,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
 
     /**
      * Returns the size fo the graph
+     *
      * @return size of the graph
      */
     @Override
@@ -324,6 +350,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
 
     /**
      * Returns true if the given index is valid , false otherwise
+     *
      * @param index1 to be tested
      * @return a boolean
      */
@@ -334,7 +361,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
     /**
      * Creates new arrays to store the contents of the graph with twice the capacity.
      */
-    protected void expandCapacity() {
+    public void expandCapacity() {
         T[] largerVertices = (T[]) (new Comparable[vertices.length * 2]);
 
         System.arraycopy(vertices, 0, largerVertices, 0, vertices.length);
@@ -366,6 +393,7 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
 
     /**
      * Removes a vertex at the given index from the graph.
+     *
      * @param vertex the vertex to be removed from this graph
      */
     @Override
@@ -391,6 +419,10 @@ public class AdjacencyMatrix<T extends Comparable<T>> implements GraphADT<T> {
                 }
             }
         }
+    }
+
+    public boolean checkIfConnectionExits(int connection1, int connection2) {
+        return this.adjMatrix[connection1][connection2];
     }
 
     public String toString() {

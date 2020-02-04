@@ -2,33 +2,24 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import interfaces.GraphADT;
-import libs.*;
-
+import exceptions.ElementNotFoundException;
+import exceptions.EmptyCollectionException;
+import libs.DoubleLinkedOrderedList;
+import libs.Network;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
 
-public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> implements GraphADT<T> {
+public class MapGame {
 
     private String name;
     private int playerPoints;
     private DoubleLinkedOrderedList<Player> playersList;
     private GameLevel gameLevel;
-    private DoubleLinkedUnorderedList<Division> divisionsList;
-    private DoubleLinkedUnorderedList<Connection>[][] mapGameMatrix;
-    private int idConnection;
-    private int divisionsId;
+    private Network<Division> graph;
 
     public MapGame() {
-        this.mapGameMatrix = new DoubleLinkedUnorderedList[super.DEFAULT_CAPACITY][super.DEFAULT_CAPACITY];
-        for (int i = 0; i < this.DEFAULT_CAPACITY; i++) {
-            for (int j = 0; j < this.DEFAULT_CAPACITY; j++) {
-                mapGameMatrix[i][j] = new DoubleLinkedUnorderedList<>();
-            }
-        }
-        this.idConnection = 0;
-        this.divisionsId = 0;
+        this.graph = new Network<>();
         this.playersList = new DoubleLinkedOrderedList<>();
     }
 
@@ -58,10 +49,6 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
         this.gameLevel = gameLevel;
     }
 
-    public DoubleLinkedUnorderedList<Division> getDivisionsList() {
-        return divisionsList;
-    }
-
     public int getPlayerPoints() {
         return playerPoints;
     }
@@ -72,14 +59,12 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
 
     //endregion
 
-    protected boolean addNewPlayer(Player player) {
+    protected void addNewPlayer(Player player) {
         try {
             getPlayersList().add(player);
-            return true;
         } catch (NullPointerException ex) {
             System.out.println("Player is null");
         }
-        return false;
     }
 
     /*public boolean removePlayer(Player player) throws ElementNotFoundException, EmptyCollectionException {
@@ -96,61 +81,8 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
         return false;
     }*/
 
-    protected void changePointsPerDivisionByGameLevel(GameLevel gameLevel) {
-
-        DoubleLinkedList<Division>.DoubleIterator iterator = getDivisionsList().iterator();
-        while (iterator.hasNext()) {
-            Division str = iterator.next();
-            str.changeGhostPoints(str.getGhostPoints(), gameLevel);
-        }
-        setGameLevel(gameLevel);
-    }
-
-    private void addNewDivision(Division division) {
-
-        if (super.numVertices == super.vertices.length) {
-            super.expandCapacity();
-        }
-        super.addVertex((T) division);
-    }
-
-    public void addNewConnection(T origin, T destiny, Connection connection) {
-        super.addEdge(origin, destiny);
-        int index1 = super.getIndex(origin);
-        int index2 = super.getIndex(destiny);
-        this.idConnection++;
-        connection.setId(this.idConnection);
-        this.mapGameMatrix[index1][index2].addToRear(connection);
-      /*  System.out.println(connection.toString());
-        System.out.println("Origin Division ->" + origin + "Destiny Division -> " + destiny);*/
-    }
-
-    /*public void removeConnection(T origin, T destiny, int connectionId) throws EmptyCollectionException {
-        Connection tempConnection;
-        int indexOne = super.getIndex(origin);
-        int indexTwo = super.getIndex(destiny);
-        int numberOfConnectionsBefore = this.mapGameMatrix[indexOne][indexTwo].size();
-
-        for (int i = 0; i < this.mapGameMatrix[indexOne][indexTwo].size(); i++) {
-            tempConnection = this.mapGameMatrix[indexOne][indexTwo].removeLast();
-            if (tempConnection.getId() != connectionId) {
-                this.mapGameMatrix[indexOne][indexTwo].addToFront(tempConnection);
-            }
-        }
-        if (this.mapGameMatrix[indexOne][indexTwo].size() == 0) {
-            super.removeEdge(origin, destiny);
-        }
-        if (numberOfConnectionsBefore == this.mapGameMatrix[indexOne][indexTwo].size()) {
-            //TODO throw Exception
-            System.out.println("Exception index don't exist");
-        }
-    }*/
-
     public void readFromJSONFile(String path) {
-
-        this.divisionsList = new DoubleLinkedUnorderedList<>();
-        Division entry = null;
-        Division exit = null;
+        int divisionsId = 0;
 
         try {
             JsonElement jsonElement = JsonParser.parseReader(new FileReader(path));
@@ -166,179 +98,222 @@ public class MapGame<T extends Comparable<T>> extends AdjacencyMatrix<T> impleme
             JsonObject mapObjects;
 
             //adds the vertices
+            Division entryDivision = new Division(divisionsId++, "entry");
+
+            this.graph.addVertex(entryDivision);
             for (int i = 0; i < map.size(); i++) {
                 mapObjects = map.get(i).getAsJsonObject();
                 String divisionName = mapObjects.get("place").getAsString();//gets the actual place in map array
-                int ghostTakenPoints = mapObjects.get("ghost").getAsInt();// points taken by the ghost
-                Division division = new Division(this.divisionsId, divisionName, ghostTakenPoints);
-                this.divisionsId++;
-                addNewDivision(division);
-                this.divisionsList.addToRear(division);
-                // adds a new division to the rear of the list
+                Division division = new Division(divisionsId++, divisionName);
+                this.graph.addVertex(division);
             }
+            Division exitDivision = new Division(divisionsId, "exit");
+            this.graph.addVertex(exitDivision);
 
-            boolean exitExistsInGraph = false;//flag to when is find the exit vertex
+            //adds the existing connections
+            for (int i = 0; i < map.size(); i++) {
 
-            DoubleLinkedList<Division>.DoubleIterator iterator = getDivisionsList().iterator();
+                mapObjects = map.get(i).getAsJsonObject();
+                String sourceDivisionName = mapObjects.get("place").getAsString();//gets the actual place in map array
+                JsonArray connections = mapObjects.getAsJsonArray("connections");
 
+                Division sourceDivision = getDivisionByName(sourceDivisionName);
 
-            while (iterator.hasNext()) {//iterates for the divisions list
+                for (int j = 0; j < connections.size(); j++) {//for cycle to find the connections between divisions
+                    String destinationDivisionName = connections.get(j).getAsString();
+                    Division destinationDivision = getDivisionByName(destinationDivisionName);
+                    int ghostPoints;
 
-                //adds the existing connections
-                for (int i = 0; i < map.size(); i++) {
-
-                    mapObjects = map.get(i).getAsJsonObject();
-                    JsonArray connections = mapObjects.getAsJsonArray("connections");
-
-                    Division connectionDivision = iterator.next();//goes to the next division
-
-                    for (int j = 0; j < connections.size(); j++) {//for cycle to find the connections between divisions
-
-                        if (connections.get(j).getAsString().equals("entry")) {//if is find the entry vertex
-                            entry = new Division(this.divisionsId, connections.get(j).getAsString(),
-                                    0);//TODO
-                            divisionsId++;
-                            addNewDivision(entry);//adds new vertex
-                            addNewConnection((T) entry, (T) connectionDivision,
-                                    new Connection(connectionDivision.getGhostPoints()));
-                            entry.addConnection(connectionDivision);
-                        } else if (connections.get(j).getAsString().equals("exit") && !exitExistsInGraph) {
-                            //just to add one vertex exit only one time
-                            exit = new Division(this.divisionsId, connections.get(j).getAsString(),
-                                    0);//TODO
-                            this.divisionsId++;
-                            addNewDivision(exit);//adds new vertex
-                            addNewConnection((T) connectionDivision, (T) exit,
-                                    new Connection(exit.getGhostPoints()));
-                            connectionDivision.addConnection(exit);
-                            exitExistsInGraph = true;
-                        } else if (connections.get(j).getAsString().equals("exit") && exitExistsInGraph) {
-
-                            addNewConnection((T) connectionDivision, (T) exit,
-                                    new Connection(exit.getGhostPoints()));//TODO
-                            connectionDivision.addConnection(exit);
-                        } else {
-                            DoubleLinkedList<Division>.DoubleIterator divisionsList = getDivisionsList().iterator();
-                            while (divisionsList.hasNext()) {
-                                Division tempDivision = divisionsList.next();
-                                if (tempDivision.getName().equals(connections.get(j).getAsString())) {
-                                    addNewConnection((T) connectionDivision, (T) tempDivision,
-                                            new Connection(tempDivision.getGhostPoints()));
-                                    connectionDivision.addConnection(tempDivision);
-                                    break;
-                                }
-                            }
-                        }
+                    if (destinationDivisionName.equals("entry")) {
+                        ghostPoints = getGhostTakenPoints(map, destinationDivision.getName());//sets the weight of the edge
+                        this.graph.addEdge(destinationDivision, sourceDivision,
+                                ghostPoints * getGameLevel().getGameLevelValue());//sets the weight of the
+                        //edge multiplier by the gameLevel
+                    } else {
+                        ghostPoints = getGhostTakenPoints(map, destinationDivision.getName());//sets the weight of the edge
+                        this.graph.addEdge(sourceDivision, destinationDivision,
+                                ghostPoints * getGameLevel().getGameLevelValue());
                     }
                 }
             }
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         }
-        this.divisionsList.addToRear(entry);
-        this.divisionsList.addToRear(exit);
     }
 
-    public void printConnections(int origin, int destiny) {
-        if (mapGameMatrix[origin][destiny].size() == 0) {
-            System.out.println("There's no connections between this vertexes");
-        }
-        System.out.println(mapGameMatrix[origin][destiny].toString());
-    }
-
-   /* @Override
-    public Iterator iteratorDFS(T division) {
-        return super.iteratorDFS(division);
-    }
-
-    @Override
-    public Iterator iteratorBFS(T division) {
-        return super.iteratorBFS(division);
-    }*/
-
-    protected Division getEntry() {
-
-        Division temp = null;
-        DoubleLinkedList<Division>.DoubleIterator iterator = getDivisionsList().iterator();
-
-        while (iterator.hasNext()) {
-            Division connectionDivision = iterator.next();//goes to the next division
-
-            if (connectionDivision.getName().equals("entry")) {
-                temp = connectionDivision;
-                break;
+    private int getGhostTakenPoints(JsonArray map, String divisionName) {
+        for (int i = 0; i < map.size(); i++) {
+            JsonObject mapDivisions = map.get(i).getAsJsonObject();
+            String sourceDivisionName = mapDivisions.get("place").getAsString();//gets the actual place in map array
+            int ghostTakenPoints = mapDivisions.get("ghost").getAsInt();// points taken by the ghost
+            if (sourceDivisionName.equals(divisionName)) {
+                return ghostTakenPoints;
             }
         }
-        return temp;
+        return 0;
     }
 
-    protected void startingPoint(Division startingDivision) {
+    private Division getDivisionByName(String divisionName) {
+        for (int i = 0; i < this.graph.getNumVertices(); i++) {
+            Division division = this.graph.getVertex(i);
+            if (division.getName().equals(divisionName)) {
+                return division;
+            }
+        }
+        throw new IndexOutOfBoundsException("Division not found");
+    }
+
+    private Division getDivisionById(int divisionId) {
+        for (int i = 0; i < this.graph.getNumVertices(); i++) {
+            Division division = this.graph.getVertex(i);
+            if (division.getId() == divisionId) {
+                return division;
+            }
+        }
+        throw new IndexOutOfBoundsException("Division not found");
+    }
+
+    protected void startingPoint() throws ElementNotFoundException, EmptyCollectionException {
 
         Scanner scanner = new Scanner(System.in);
-        DoubleLinkedList<Division>.DoubleIterator iterator = getDivisionsList().iterator();
+        Player player = getPlayersList().first();
 
-        while (iterator.hasNext()) {
-            Division connectionDivision = iterator.next();//goes to the next division
+        Division startingPoint = getDivisionByName("entry");
 
-            if (connectionDivision.equals(startingDivision)) {
-                System.out.println("Points: " + getPlayerPoints());
-                connectionDivision.printConnections();
-                System.out.println("Choose the next move: ");
-                int playerChoice = scanner.nextInt();
-                if (super.adjMatrix[startingDivision.getId()][playerChoice]) { //check if the connection exist
-                    moveToAnotherDivision(playerChoice, connectionDivision);
-                    setPlayerPoints(getPlayerPoints() - connectionDivision.getGhostPoints());
-                    System.out.println("Points: " + getPlayerPoints());
+        System.out.println("     *****************************");
+        System.out.println("     Player Points: " + player.getPoints() + "\n");
+        System.out.println("Possible next Divisions :");
+        //print connections
+        printConnections(startingPoint);
+        System.out.println("\nChoose the next move: ");
+        int playerChoice = scanner.nextInt();
+
+        if (this.graph.checkIfConnectionExits(startingPoint.getId(), playerChoice)) { //check if the connection exist
+            System.out.println("     *****************************");
+            moveToAnotherDivision(startingPoint.getId(), getDivisionById(playerChoice));
+        } else {
+            System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
+            System.out.println("     *****************************");
+            startingPoint();
+        }
+    }
+
+
+    protected void moveToAnotherDivision(int originId, Division division)
+            throws ElementNotFoundException, EmptyCollectionException {
+
+        Player player = getPlayersList().first();
+        int playerChoice;
+        //gets the originDivision to the case if its not find conncetions
+
+        for (int i = 0; i < this.graph.getNumVertices(); i++) {
+            Scanner scanner = new Scanner(System.in);
+
+            if (this.graph.getVertex(i).getName().equals("exit") && player.getPoints() > 0) {
+                if (this.graph.checkIfConnectionExits(originId,
+                        this.graph.getVertex(i).getId())) {
+                    System.out.println("MESSAGE: You Won! Congratulations :)");
+                    finishScreen();
+                } else if (!this.graph.checkIfConnectionExits(originId, this.graph.getVertex(i).getId())) {
+                    System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
+                    moveToAnotherDivision(originId, division);
                 } else {
-                    System.out.println("Wrong choice. Pick a valid connection!");
-                    startingPoint(startingDivision);
+                    System.out.println("MESSAGE: Game Over! :(");
+                    gameOverScreen();
                 }
+                return;
 
+            } else if (this.graph.getVertex(i).getId() == division.getId() && player.getPoints() > 0) {
+
+                if (this.graph.checkIfConnectionExits(originId,
+                        this.graph.getVertex(i).getId())) {
+
+                    player.setPoints(player.getPoints() - this.graph.getAdjMatrix()[originId][i]);
+                    System.out.println("     *****************************");
+                    System.out.println("     Player Points: " + player.getPoints() + "\n");
+                    System.out.println("Possible next Divisions :");
+                    printConnections(division);
+                    System.out.println("\nChoose the next move: ");
+                    playerChoice = scanner.nextInt();
+                    System.out.println("     *****************************");
+                    moveToAnotherDivision(division.getId(), getDivisionById(playerChoice));
+
+                } else if (!this.graph.checkIfConnectionExits(division.getId(),
+                        this.graph.getVertex(i).getId())) {
+                    System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
+                    System.out.println("     *****************************");
+                    System.out.println("     Player Points: " + player.getPoints() + "\n");
+                    System.out.println("Possible next Divisions :");
+                    printConnections(getDivisionById(originId));
+                    System.out.println("\nChoose the next move: ");
+                    playerChoice = scanner.nextInt();
+                    System.out.println("     *****************************");
+                    moveToAnotherDivision(originId, getDivisionById(playerChoice));
+                } else {
+                    System.out.println("MESSAGE: Game Over! :(");
+                    gameOverScreen();
+                }
+                return;
+            } else if (getPlayerPoints() <= 0) {
+                System.out.println("MESSAGE: Game Over! :(");
+                gameOverScreen();
+                return;
             }
         }
     }
 
-    protected void moveToAnotherDivision(int divisionId, Division origin) {
+    private void printConnections(Division origin) {
 
-        Scanner scanner = new Scanner(System.in);
-        DoubleLinkedList<Division>.DoubleIterator iterator = getDivisionsList().iterator();
-
-        while (iterator.hasNext()) {
-            Division connectionDivision = iterator.next();//goes to the next division;
-
-            if (connectionDivision.getName().equals("exit")) {
-                if (super.adjMatrix[origin.getId()][connectionDivision.getId()]) {
-                    System.out.println("Finish Points: " + getPlayerPoints());
-                    System.out.println("Finish");
-                } else {
-                    System.out.println("Wrong choice. Pick a valid connection!");
-                    startingPoint(origin);
-                }
-                break;
-            }
-            if (connectionDivision.getId() == divisionId) {
-                if (super.adjMatrix[origin.getId()][connectionDivision.getId()]) {
-                    setPlayerPoints(getPlayerPoints() - connectionDivision.getGhostPoints());
-                    System.out.println("Points: " + getPlayerPoints());
-                    connectionDivision.printConnections();
-                    System.out.println("Choose the next move: ");
-                    int playerChoice = scanner.nextInt();
-                    moveToAnotherDivision(playerChoice, connectionDivision);
-                } else {
-                    System.out.println("Wrong choice. Pick a valid connection!");
-                    startingPoint(origin);
-                }
-                break;
+        for (int j = 0; j < this.graph.getNumVertices(); j++) {
+            if (this.graph.checkIfConnectionExits(origin.getId(),
+                    this.graph.getVertex(j).getId())) {
+                System.out.println(this.graph.getVertex(j).toString());
             }
         }
+    }
+
+    private void gameOverScreen() throws ElementNotFoundException, EmptyCollectionException {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("     *****************************");
+        System.out.println("     Game Over  \n");
+        System.out.println("     Do you want to try Again ? ");
+        System.out.println("     1 - Yes ");
+        System.out.println("     2 - No  ");
+        switch (scanner.nextInt()) {
+            case 1:
+                Main main = new Main();
+                main.initGame();
+                break;
+            case 2:
+                System.out.println("MESSAGE: Program Closed");
+                break;
+            default:
+                System.out.println("MESSAGE: Wrong choice. Pick a valid option!");
+                gameOverScreen();
+                break;
+        }
+        System.out.println("     *****************************");
+    }
+
+    private void finishScreen() throws ElementNotFoundException, EmptyCollectionException {
+        Main main = new Main();
+        System.out.println("     *****************************");
+        System.out.println("     Finished Game  \n");
+        System.out.println("     Level: " + getGameLevel().toString());
+        System.out.println("     Player Name: " + getPlayersList().first().getName());
+        System.out.println("     Player Points: " + getPlayersList().first().getPoints() + "\n");
+        System.out.println("     *****************************");
+        main.initGame();
+    }
+
+    protected void simulationMode() throws ElementNotFoundException, EmptyCollectionException {
+        // System.out.println(DijkstraAlgorithm.calculateShortestPathFromSource(getEntry()));
     }
 
     @Override
     public String toString() {
-        return " Name = " + name + "\n" +
-                " GameLevel = \t" + gameLevel + "\n" +
-                " PlayersList: \n" + playersList + "\n" +
-                " Divisions: \n" + divisionsList;
+        return " Name = " + this.name + "\n" +
+                " GameLevel = \t" + this.gameLevel + "\n";
     }
 }
-

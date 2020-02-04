@@ -7,13 +7,13 @@ import interfaces.ListADT;
 import java.util.ConcurrentModificationException;
 import java.util.NoSuchElementException;
 
-public class DoubleLinkedList<T>  implements ListADT<T> {
+public class DoubleLinkedList<T extends Comparable<T>> implements ListADT<T> {
 
     private DoubleNode<T> head, tail;
     private int count;
     private int modCount;
 
-    DoubleLinkedList() {
+    public DoubleLinkedList() {
         this.head = null;
         this.tail = null;
         this.count = 0;
@@ -175,7 +175,7 @@ public class DoubleLinkedList<T>  implements ListADT<T> {
         DoubleIterator itr = new DoubleIterator(getHead());
 
         while (itr.hasNext()) {
-            stringBuilder.append(itr.next());
+            stringBuilder.append(itr.next()).append("\n");
         }
         return String.valueOf(stringBuilder);
     }

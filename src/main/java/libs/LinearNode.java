@@ -1,7 +1,6 @@
 package libs;
 
-class LinearNode<T> {
-
+public class LinearNode<T> implements Comparable<LinearNode<T>> {
     /**
      * reference to next node in list
      */
@@ -25,7 +24,7 @@ class LinearNode<T> {
      *
      * @param elem element to be stored
      */
-    LinearNode(T elem) {
+    public LinearNode(T elem) {
         next = null;
         element = elem;
     }
@@ -53,7 +52,7 @@ class LinearNode<T> {
      *
      * @return T element stored at this node
      */
-    T getElement() {
+    public T getElement() {
         return element;
     }
 
@@ -66,4 +65,8 @@ class LinearNode<T> {
         element = elem;
     }
 
+    @Override
+    public int compareTo(LinearNode o) {
+        return 0;//TODO
+    }
 }
