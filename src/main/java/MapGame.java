@@ -6,6 +6,7 @@ import exceptions.ElementNotFoundException;
 import exceptions.EmptyCollectionException;
 import libs.DoubleLinkedOrderedList;
 import libs.Network;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
@@ -139,6 +140,10 @@ public class MapGame {
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         }
+        mapGameInConsole();
+        System.out.println(
+                graph.shortestPathWeight(getDivisionByName("entry"),
+                        getDivisionByName("hall")));
     }
 
     private int getGhostTakenPoints(JsonArray map, String divisionName) {
@@ -181,8 +186,10 @@ public class MapGame {
         Division startingPoint = getDivisionByName("entry");
 
         System.out.println("     *****************************");
+        System.out.println(String.format("%-15s %-45s", " ", "Division"));
+        System.out.println(String.format("%-15s %-42s", " ", "|" + startingPoint.getName() + "|" + "\n"));
         System.out.println("     Player Points: " + player.getPoints() + "\n");
-        System.out.println("Possible next Divisions :");
+        System.out.println("     Possible next Divisions :");
         //print connections
         printConnections(startingPoint);
         System.out.println("\nChoose the next move: ");
@@ -204,7 +211,6 @@ public class MapGame {
 
         Player player = getPlayersList().first();
         int playerChoice;
-        //gets the originDivision to the case if its not find conncetions
 
         for (int i = 0; i < this.graph.getNumVertices(); i++) {
             Scanner scanner = new Scanner(System.in);
@@ -230,8 +236,11 @@ public class MapGame {
 
                     player.setPoints(player.getPoints() - this.graph.getAdjMatrix()[originId][i]);
                     System.out.println("     *****************************");
+                    System.out.println(String.format("%-15s %-45s", " ", "Division"));
+                    System.out.println(String.format("%-15s %-42s ", " ",
+                            "|" + this.graph.getVertex(i).getName() + "|\n"));
                     System.out.println("     Player Points: " + player.getPoints() + "\n");
-                    System.out.println("Possible next Divisions :");
+                    System.out.println("     Possible next Divisions :");
                     printConnections(division);
                     System.out.println("\nChoose the next move: ");
                     playerChoice = scanner.nextInt();
@@ -241,9 +250,12 @@ public class MapGame {
                 } else if (!this.graph.checkIfConnectionExits(division.getId(),
                         this.graph.getVertex(i).getId())) {
                     System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
-                    System.out.println("     *****************************");
+                    System.out.println("     *****************************\n");
+                    System.out.println(String.format("%-15s %-45s", " ", "Division"));
+                    System.out.println(String.format("%-15s %-42s ", " ",
+                            "|" + getDivisionById(originId).getName() + "|\n"));
                     System.out.println("     Player Points: " + player.getPoints() + "\n");
-                    System.out.println("Possible next Divisions :");
+                    System.out.println("     Possible next Divisions :");
                     printConnections(getDivisionById(originId));
                     System.out.println("\nChoose the next move: ");
                     playerChoice = scanner.nextInt();
@@ -309,6 +321,28 @@ public class MapGame {
 
     protected void simulationMode() throws ElementNotFoundException, EmptyCollectionException {
         // System.out.println(DijkstraAlgorithm.calculateShortestPathFromSource(getEntry()));
+    }
+
+    private void mapGameInConsole() {
+
+        for (int i = 0; i < this.graph.getNumVertices(); i++) {
+            if (!this.graph.getVertex(i).getName().equals("exit")) {
+                System.out.println("\n***************************************");
+                System.out.println(String.format("%-12s %-35s", " ", "Division"));
+                System.out.println(String.format("%-10s %-20s ", " ", "|" +
+                        this.graph.getVertex(i).getName() + "|\n"));
+                System.out.println("  Connections:");
+            }
+            for (int j = 0; j < this.graph.getNumVertices(); j++) {
+                if (this.graph.getAdjMatrix()[i][j] >= 0) {
+                    System.out.println(String.format("%-25s %-10s", "  ----->|" +
+                                    this.graph.getVertex(j).getName() + "|",
+                            "Ghost: " + this.graph.getAdjMatrix()[i][j]));
+                }
+            }
+            System.out.println("\n***************************************");
+
+        }
     }
 
     @Override

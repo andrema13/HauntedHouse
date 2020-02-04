@@ -70,7 +70,49 @@ public class Network<T> /*extends Graph<T>*/implements NetworkADT<T> {
      * @param vertex to be tested
      * @return an int
      */
-    private int getIndex(T vertex) {
+
+    /**
+     * Returns the weight of the least weight path in the network.
+     * Returns positive infinity if no path is found.
+     **/
+    public double shortestPathWeight(T startVertex, T targetVertex)
+    {
+        return shortestPathWeight(getIndex(startVertex),
+                getIndex(targetVertex));
+    }
+
+    /**
+     *  Returns the weight of the least weight path in the network.
+     *  Returns positive infinity if no path is found.
+     * @param startIndex starting vertex index
+     * @param targetIndex final vertex index
+     * @return shortest path
+     */
+    public double shortestPathWeight(int startIndex, int targetIndex)
+    {
+        double result = 0;
+        if (!indexIsValid(startIndex) || !indexIsValid(targetIndex))
+            return Double.POSITIVE_INFINITY;
+
+        int index1, index2;
+        Iterator<Integer> it = iteratorShortestPathIndices(startIndex,
+                targetIndex);
+
+        if (it.hasNext())
+            index1 = it.next();
+        else
+            return Double.POSITIVE_INFINITY;
+
+        while (it.hasNext())
+        {
+            index2 = it.next();
+            result += weightedAdjMatrix[index1][index2];
+            index1 = index2;
+        }
+
+        return result;
+    }
+    protected int getIndex(T vertex) {
 
         try {
             for (int i = 0; i < vertices.length; i++) {
@@ -110,11 +152,6 @@ public class Network<T> /*extends Graph<T>*/implements NetworkADT<T> {
     @Override
     public void addEdge(T vertex1, T vertex2, double weight) {
         addEdge(getIndex(vertex1), getIndex(vertex2), weight);
-    }
-
-    @Override
-    public double shortestPathWeight(T vertex1, T vertex2) {
-        return 0;
     }
 
     /**
@@ -455,7 +492,7 @@ public class Network<T> /*extends Graph<T>*/implements NetworkADT<T> {
                 if (weightedAdjMatrix[i][j] >= 0) {
                     result.append(weightedAdjMatrix[i][j]).append(" ");
                 } else {
-                    result.append("? ");
+                    result.append("|?| ");
                 }
             }
             result.append("\n");
