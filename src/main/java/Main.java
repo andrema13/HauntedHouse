@@ -66,16 +66,12 @@ public class Main {
     private void newGameScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException, IOException {
         System.out.println("     *****************************");
         System.out.println("     Select Mode:                \n");
-        System.out.println("         1- Simulation Mode     ");
-        System.out.println("         2- Manual Mode         ");
+        System.out.println("         1- Manual Mode         \n");
         System.out.println("         0- Back                ");
         System.out.println("     *****************************");
 
         switch (scanner.next()) {
             case "1":
-                simulationGameScreen();
-                break;
-            case "2":
                 typeNameScreen(scanner);
                 break;
             case "0":
@@ -91,14 +87,6 @@ public class Main {
         System.out.println("     *****************************");
         System.out.println("     HighScores                   ");
         mapGame.getHighScores();
-        System.out.println("     *****************************");
-        initGame();
-    }
-
-    private void simulationGameScreen() throws ElementNotFoundException, EmptyCollectionException, IOException {
-        System.out.println("     *****************************");
-        System.out.println("     Simulation Mode             \n");
-        mapGame.simulationMode();
         System.out.println("     *****************************");
         initGame();
     }
@@ -156,8 +144,11 @@ public class Main {
     }
 
     private void startNewGame(GameLevel gameLevel) throws ElementNotFoundException, IOException, EmptyCollectionException {
+        Player player = new Player(getPlayerName(), mapGame.getPlayerPoints());
         mapGame.setGameLevel(gameLevel);
-        mapGame.addNewPlayer(new Player(getPlayerName(), mapGame.getPlayerPoints()));
+        mapGame.addNewPlayer(player);
+        mapGame.mapGameInConsole();//shows the map in the console
+        infoGameScreen(player, gameLevel);
         mapGame.startingPoint();
     }
 

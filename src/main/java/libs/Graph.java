@@ -149,7 +149,7 @@ public class Graph<T> implements GraphADT<T> {
                     }
                 }
             } catch (Exception ex) {
-                //TODO
+
             }
         }
         return resultList.iterator();
@@ -278,7 +278,7 @@ public class Graph<T> implements GraphADT<T> {
                     }
                 }
             } catch (Exception ex) {
-                //TODO
+
             }
         }
         if (index != targetIndex) // no path must have been found

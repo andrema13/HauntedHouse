@@ -1,6 +1,6 @@
 package libs;
 
-public class DoubleNode<T extends Comparable<T>> implements Comparable<DoubleNode<T>> {
+public class DoubleNode<T extends Comparable<T>> {
 
     private DoubleNode<T> next;
     private T element;
@@ -69,10 +69,5 @@ public class DoubleNode<T extends Comparable<T>> implements Comparable<DoubleNod
      */
     public void setPrevious(DoubleNode<T> dnode) {
         this.previous = dnode;
-    }
-
-    @Override
-    public int compareTo(DoubleNode<T> o) {
-        return 0;//TODO
     }
 }

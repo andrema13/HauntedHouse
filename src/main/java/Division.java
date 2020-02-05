@@ -1,4 +1,4 @@
-public class Division implements Comparable<Division> {
+public class Division {
 
     /**
      * Id of this map
@@ -11,7 +11,8 @@ public class Division implements Comparable<Division> {
 
     /**
      * Constructor that initializes this division
-     * @param id to this division
+     *
+     * @param id   to this division
      * @param name to this division
      */
     Division(int id, String name) {
@@ -23,6 +24,7 @@ public class Division implements Comparable<Division> {
     public int getId() {
         return id;
     }
+
     public String getName() {
         return name;
     }
@@ -33,9 +35,4 @@ public class Division implements Comparable<Division> {
         return String.format("%-15s %-20s", "     ID = " + this.id, "Name = " + this.name);
     }
 
-    //TODO
-    @Override
-    public int compareTo(Division o) {
-        return this.id - o.id;
-    }
 }

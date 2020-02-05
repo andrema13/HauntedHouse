@@ -77,7 +77,11 @@ public class MapGame {
      * @param player to be added
      */
     protected void addNewPlayer(Player player) {
-        this.player = player;
+        if (player != null) {
+            this.player = player;
+        } else {
+            throw new NullPointerException("Player is null");
+        }
     }
 
     /**
@@ -196,9 +200,9 @@ public class MapGame {
     /**
      * Searches for the starting point of the game, in this case would be the "entry"
      *
-     * @throws ElementNotFoundException //TODO
-     * @throws EmptyCollectionException //TODO
-     * @throws IOException              //TODO
+     * @throws ElementNotFoundException
+     * @throws EmptyCollectionException
+     * @throws IOException
      */
     protected void startingPoint() throws ElementNotFoundException, EmptyCollectionException, IOException {
 
@@ -231,7 +235,7 @@ public class MapGame {
      *
      * @param originId origin division before moving
      * @param division destiny division to go forward
-     * @throws ElementNotFoundException //TODO
+     * @throws ElementNotFoundException
      * @throws EmptyCollectionException
      * @throws IOException
      */
@@ -319,7 +323,7 @@ public class MapGame {
     /**
      * Game Over Screen, runs when the player losts the game
      *
-     * @throws ElementNotFoundException //TODO
+     * @throws ElementNotFoundException
      * @throws EmptyCollectionException
      * @throws IOException
      */
@@ -351,7 +355,7 @@ public class MapGame {
      * Finish screen when the player wins the game
      *
      * @param player player that won the game
-     * @throws ElementNotFoundException //TODO
+     * @throws ElementNotFoundException
      * @throws EmptyCollectionException
      * @throws IOException
      */
@@ -365,15 +369,10 @@ public class MapGame {
         writeToFile();//writes the player score to a file
     }
 
-    //TODO  docs
-    protected void simulationMode() throws ElementNotFoundException, EmptyCollectionException {
-        // System.out.println(DijkstraAlgorithm.calculateShortestPathFromSource(getEntry()));
-    }
-
     /**
      * Prints the map in the console with the all divisions and his connections
      */
-    private void mapGameInConsole() {
+    protected void mapGameInConsole() {
 
         for (int i = 0; i < this.graph.getNumVertices(); i++) {
             if (!this.graph.getVertex(i).getName().equals("exit")) {
@@ -457,7 +456,7 @@ public class MapGame {
                 i++;
             }
         } else {
-            System.out.println("No high scores at this moment");
+            System.out.println("MESSAGE: No high scores at this moment");
         }
     }
 }
