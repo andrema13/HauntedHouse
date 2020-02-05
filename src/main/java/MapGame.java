@@ -1,27 +1,46 @@
 import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
 import exceptions.ElementNotFoundException;
 import exceptions.EmptyCollectionException;
-import libs.DoubleLinkedOrderedList;
+import libs.ArrayList;
+import libs.ArrayOrderedList;
 import libs.Network;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.Scanner;
 
 public class MapGame {
 
+    /**
+     * Name of the map
+     */
     private String name;
+    /**
+     * Initial player points in this map
+     */
     private int playerPoints;
-    private DoubleLinkedOrderedList<Player> playersList;
+    /**
+     * List of the players in this map
+     */
+    private Player player;
+    /**
+     * Game Level of this map
+     */
     private GameLevel gameLevel;
+    /**
+     * Graph with Divisions as Nodes
+     */
     private Network<Division> graph;
 
+    /**
+     * Constructor that initializes the game
+     */
     public MapGame() {
         this.graph = new Network<>();
-        this.playersList = new DoubleLinkedOrderedList<>();
+        readFromJSONFile();
     }
 
     //region get-set
@@ -34,16 +53,8 @@ public class MapGame {
         this.name = name;
     }
 
-    public DoubleLinkedOrderedList<Player> getPlayersList() {
-        return playersList;
-    }
-
-    public void setPlayersList(DoubleLinkedOrderedList<Player> playersList) {
-        this.playersList = playersList;
-    }
-
     public GameLevel getGameLevel() {
-        return gameLevel;
+        return this.gameLevel;
     }
 
     public void setGameLevel(GameLevel gameLevel) {
@@ -51,7 +62,7 @@ public class MapGame {
     }
 
     public int getPlayerPoints() {
-        return playerPoints;
+        return this.playerPoints;
     }
 
     public void setPlayerPoints(int playerPoints) {
@@ -60,33 +71,23 @@ public class MapGame {
 
     //endregion
 
+    /**
+     * Adds a new Player to list with players in this map
+     *
+     * @param player to be added
+     */
     protected void addNewPlayer(Player player) {
-        try {
-            getPlayersList().add(player);
-        } catch (NullPointerException ex) {
-            System.out.println("Player is null");
-        }
+        this.player = player;
     }
 
-    /*public boolean removePlayer(Player player) throws ElementNotFoundException, EmptyCollectionException {
-
-        DoubleLinkedList<Player>.DoubleIterator itr = getPlayersList().iterator();
-
-        while (itr.hasNext()) {
-            if (getPlayersList().contains(player)) {
-                getPlayersList().remove(player);
-                itr.next();
-                return true;
-            }
-        }
-        return false;
-    }*/
-
-    public void readFromJSONFile(String path) {
+    /**
+     * Reads the Json File that contains the map with the divisions
+     */
+    private void readFromJSONFile() {
         int divisionsId = 0;
 
         try {
-            JsonElement jsonElement = JsonParser.parseReader(new FileReader(path));
+            JsonElement jsonElement = JsonParser.parseReader(new FileReader("map.json"));
 
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             String name = jsonObject.get("name").getAsString();//gets the name of the game
@@ -101,6 +102,7 @@ public class MapGame {
             //adds the vertices
             Division entryDivision = new Division(divisionsId++, "entry");
 
+            // add the nodes of the map
             this.graph.addVertex(entryDivision);
             for (int i = 0; i < map.size(); i++) {
                 mapObjects = map.get(i).getAsJsonObject();
@@ -111,7 +113,7 @@ public class MapGame {
             Division exitDivision = new Division(divisionsId, "exit");
             this.graph.addVertex(exitDivision);
 
-            //adds the existing connections
+            //adds the existing connections as edges
             for (int i = 0; i < map.size(); i++) {
 
                 mapObjects = map.get(i).getAsJsonObject();
@@ -127,30 +129,26 @@ public class MapGame {
 
                     if (destinationDivisionName.equals("entry")) {
                         ghostPoints = getGhostTakenPoints(map, destinationDivision.getName());//sets the weight of the edge
-                        this.graph.addEdge(destinationDivision, sourceDivision,
-                                ghostPoints * getGameLevel().getGameLevelValue());//sets the weight of the
+                        this.graph.addEdge(destinationDivision, sourceDivision, ghostPoints);
                         //edge multiplier by the gameLevel
                     } else {
                         ghostPoints = getGhostTakenPoints(map, destinationDivision.getName());//sets the weight of the edge
-                        this.graph.addEdge(sourceDivision, destinationDivision,
-                                ghostPoints * getGameLevel().getGameLevelValue());
+                        this.graph.addEdge(sourceDivision, destinationDivision, ghostPoints);
                     }
                 }
             }
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         }
-        mapGameInConsole();
-
-        /*Iterator<Division> it = graph.iteratorShortestPath(getDivisionByName("entry"), getDivisionByName("exit"));
-        while (it.hasNext()) {
-            Division d = it.next();
-            System.out.println(d.getName());
-        }
-
-        System.out.println(graph.shortestPathWeight(getDivisionByName("office"), getDivisionByName("bedroom")));*/
     }
 
+    /**
+     * Private method that reads the ghost taken points per division
+     *
+     * @param map          Json array that contains the divisions
+     * @param divisionName to filter the specific division
+     * @return the ghost taken points in this division
+     */
     private int getGhostTakenPoints(JsonArray map, String divisionName) {
         for (int i = 0; i < map.size(); i++) {
             JsonObject mapDivisions = map.get(i).getAsJsonObject();
@@ -163,6 +161,12 @@ public class MapGame {
         return 0;
     }
 
+    /**
+     * Returns the Division by the name passed in the parameter
+     *
+     * @param divisionName division name to be searched
+     * @return the division or throws an exception
+     */
     private Division getDivisionByName(String divisionName) {
         for (int i = 0; i < this.graph.getNumVertices(); i++) {
             Division division = this.graph.getVertex(i);
@@ -173,6 +177,12 @@ public class MapGame {
         throw new IndexOutOfBoundsException("Division not found");
     }
 
+    /**
+     * Returns the Division by the id passed in the parameter
+     *
+     * @param divisionId division name to be searched
+     * @return the division or throws an exception
+     */
     private Division getDivisionById(int divisionId) {
         for (int i = 0; i < this.graph.getNumVertices(); i++) {
             Division division = this.graph.getVertex(i);
@@ -183,11 +193,16 @@ public class MapGame {
         throw new IndexOutOfBoundsException("Division not found");
     }
 
-    protected void startingPoint() throws ElementNotFoundException, EmptyCollectionException {
+    /**
+     * Searches for the starting point of the game, in this case would be the "entry"
+     *
+     * @throws ElementNotFoundException //TODO
+     * @throws EmptyCollectionException //TODO
+     * @throws IOException              //TODO
+     */
+    protected void startingPoint() throws ElementNotFoundException, EmptyCollectionException, IOException {
 
         Scanner scanner = new Scanner(System.in);
-        Player player = getPlayersList().first();
-
         Division startingPoint = getDivisionByName("entry");
 
         System.out.println("     *****************************");
@@ -210,22 +225,30 @@ public class MapGame {
         }
     }
 
+    /**
+     * Moves to another division after the starting point, will continue looping, recursively until the player
+     * loses or wins the game
+     *
+     * @param originId origin division before moving
+     * @param division destiny division to go forward
+     * @throws ElementNotFoundException //TODO
+     * @throws EmptyCollectionException
+     * @throws IOException
+     */
+    private void moveToAnotherDivision(int originId, Division division)
+            throws ElementNotFoundException, EmptyCollectionException, IOException {
 
-    protected void moveToAnotherDivision(int originId, Division division)
-            throws ElementNotFoundException, EmptyCollectionException {
-
-        Player player = getPlayersList().first();
         int playerChoice;
-
+        //runs in the existent nodes, divisions in this case
         for (int i = 0; i < this.graph.getNumVertices(); i++) {
             Scanner scanner = new Scanner(System.in);
-
+            //if the next division is the "exit" and the players still have points >0
             if (this.graph.getVertex(i).getName().equals("exit") && player.getPoints() > 0) {
-                if (this.graph.checkIfConnectionExits(originId,
-                        this.graph.getVertex(i).getId())) {
+                //checks if the connection exists
+                if (this.graph.checkIfConnectionExits(originId, this.graph.getVertex(i).getId())) {
                     System.out.println("MESSAGE: You Won! Congratulations :)");
-                    finishScreen();
-                    writeToFile();
+                    finishScreen(player);
+                    //if the connection doesn't exist
                 } else if (!this.graph.checkIfConnectionExits(originId, this.graph.getVertex(i).getId())) {
                     System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
                     moveToAnotherDivision(originId, division);
@@ -234,13 +257,13 @@ public class MapGame {
                     gameOverScreen();
                 }
                 return;
-
+                //if the next vertex is the given division id and the player still have remaining points
             } else if (this.graph.getVertex(i).getId() == division.getId() && player.getPoints() > 0) {
-
+                //if the connection exist
                 if (this.graph.checkIfConnectionExits(originId,
                         this.graph.getVertex(i).getId())) {
 
-                    player.setPoints(player.getPoints() - this.graph.getWeightedAdjMatrix()[originId][i]);
+                    player.setPoints(player.getPoints() - (this.graph.getWeightedAdjMatrix()[originId][i] * gameLevel.getGameLevelValue()));
                     System.out.println("     *****************************");
                     System.out.println(String.format("%-15s %-45s", " ", "Division"));
                     System.out.println(String.format("%-15s %-42s ", " ",
@@ -252,7 +275,7 @@ public class MapGame {
                     playerChoice = scanner.nextInt();
                     System.out.println("     *****************************");
                     moveToAnotherDivision(division.getId(), getDivisionById(playerChoice));
-
+                    //if the connection doesn't exist
                 } else if (!this.graph.checkIfConnectionExits(division.getId(), this.graph.getVertex(i).getId())) {
                     System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
                     System.out.println("     *****************************\n");
@@ -293,7 +316,14 @@ public class MapGame {
         }
     }
 
-    private void gameOverScreen() throws ElementNotFoundException, EmptyCollectionException {
+    /**
+     * Game Over Screen, runs when the player losts the game
+     *
+     * @throws ElementNotFoundException //TODO
+     * @throws EmptyCollectionException
+     * @throws IOException
+     */
+    private void gameOverScreen() throws ElementNotFoundException, EmptyCollectionException, IOException {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("     *****************************");
@@ -317,21 +347,32 @@ public class MapGame {
         System.out.println("     *****************************");
     }
 
-    private void finishScreen() throws ElementNotFoundException, EmptyCollectionException {
-        Main main = new Main();
+    /**
+     * Finish screen when the player wins the game
+     *
+     * @param player player that won the game
+     * @throws ElementNotFoundException //TODO
+     * @throws EmptyCollectionException
+     * @throws IOException
+     */
+    private void finishScreen(Player player) throws ElementNotFoundException, EmptyCollectionException, IOException {
         System.out.println("     *****************************");
         System.out.println("     Finished Game  \n");
         System.out.println("     Level: " + getGameLevel().toString());
-        System.out.println("     Player Name: " + getPlayersList().first().getName());
-        System.out.println("     Player Points: " + getPlayersList().first().getPoints() + "\n");
+        System.out.println("     Player Name: " + player.getName());
+        System.out.println("     Player Points: " + player.getPoints() + "\n");
         System.out.println("     *****************************");
-        main.initGame();
+        writeToFile();//writes the player score to a file
     }
 
+    //TODO  docs
     protected void simulationMode() throws ElementNotFoundException, EmptyCollectionException {
         // System.out.println(DijkstraAlgorithm.calculateShortestPathFromSource(getEntry()));
     }
 
+    /**
+     * Prints the map in the console with the all divisions and his connections
+     */
     private void mapGameInConsole() {
 
         for (int i = 0; i < this.graph.getNumVertices(); i++) {
@@ -354,31 +395,69 @@ public class MapGame {
         }
     }
 
+    /**
+     * Writes to the file the list of the player of this map
+     */
     protected void writeToFile() {
-
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
+        ArrayOrderedList<Player> players = loadPlayers();
+        if (players == null) {
+            players = new ArrayOrderedList<>();
+        }
+        players.add(player);
         try {
-            FileWriter fileWriter = new FileWriter("./src/data/" + System.currentTimeMillis() + ".json");
-            gson.toJson(this.playersList, fileWriter);
-            fileWriter.flush();
-            fileWriter.close();
+            FileWriter writer = new FileWriter("data/" + this.name + ".json", false);
+            Gson gson = new Gson();
+            Player[] playersArray = new Player[players.size()];
+            ArrayList<Player>.BasicIterator iterator = players.iterator();
+            int i = 0;
+            while (iterator.hasNext()) {
+                Player player = iterator.next();
+                playersArray[i++] = player;
+            }
+            gson.toJson(playersArray, Player[].class, writer);
+            writer.flush();
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    protected void readFromFile(String filePath) {
+    /**
+     * Reads from the file the players scores , if exists any and returns a Json array
+     *
+     * @return Json array with the players
+     */
+    private ArrayOrderedList<Player> loadPlayers() {
+        Gson gson = new Gson();
         try {
-            this.playersList = new Gson().fromJson(new FileReader(filePath), (Type) getPlayersList());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            JsonReader reader = new JsonReader(new FileReader("data/" + this.name + ".json"));
+            Player[] players = gson.fromJson(reader, Player[].class);
+            ArrayOrderedList<Player> list = new ArrayOrderedList<>();
+            for (Player player : players) {
+                list.add(player);
+            }
+            return list;
+        } catch (FileNotFoundException | NullPointerException e) {
+            return null;
         }
     }
 
-    @Override
-    public String toString() {
-        return " Name = " + this.name + "\n" +
-                " GameLevel = \t" + this.gameLevel + "\n";
+    /**
+     * Screen that shows the High Scores of a specific map
+     */
+    protected void getHighScores() {
+        ArrayOrderedList<Player> players = loadPlayers();
+        if (players != null) {
+            ArrayList<Player>.BasicIterator playerIterator = players.iterator();
+            int i = 1;
+            while (playerIterator.hasNext()) {
+                Player player = playerIterator.next();
+                System.out.println(String.format("%-1s %-20s %-20s", i + ":", player.getName(), "Points: " + player.getPoints()));
+                System.out.println("    ");
+                i++;
+            }
+        } else {
+            System.out.println("No high scores at this moment");
+        }
     }
 }

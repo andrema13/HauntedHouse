@@ -4,7 +4,7 @@ import interfaces.OrderedListADT;
 
 public class ArrayOrderedList<T> extends ArrayList<T> implements OrderedListADT<T> {
 
-    ArrayOrderedList() {
+    public ArrayOrderedList() {
         super();
     }
 

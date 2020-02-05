@@ -172,13 +172,14 @@ public class ArrayList<T> implements ListADT<T> {
     @Override
     public String toString() {
 
-        StringBuilder stringBuilder = new StringBuilder();
+        /*StringBuilder stringBuilder = new StringBuilder();
 
         while (itr.hasNext()) {
             stringBuilder.append(itr.next());
             stringBuilder.append("|");
         }
-        return String.valueOf(stringBuilder);
+        return String.valueOf(stringBuilder);*/
+        return "";
     }
 
     protected void increaseModCount() {
@@ -189,7 +190,7 @@ public class ArrayList<T> implements ListADT<T> {
         setLength(getLength() + 1);
     }
 
-    private class BasicIterator implements Iterator {
+    public class BasicIterator implements Iterator {
 
         private T[] list;
         private int currentSize;

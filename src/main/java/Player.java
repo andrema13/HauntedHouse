@@ -1,8 +1,20 @@
 public class Player implements Comparable<Player> {
 
+    /**
+     * Name of this player
+     */
     private String name;
+    /**
+     * Points of this player
+     */
     private double points;
 
+    /**
+     * Initialize a player with a name and his points
+     *
+     * @param playerName   name
+     * @param playerPoints points
+     */
     Player(String playerName, int playerPoints) {
         this.points = playerPoints;
         this.name = playerName;
@@ -11,10 +23,6 @@ public class Player implements Comparable<Player> {
 
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public double getPoints() {
@@ -34,14 +42,6 @@ public class Player implements Comparable<Player> {
 
     @Override
     public int compareTo(Player o) {
-
-        double bestPlayer = this.points;
-        int result = -1;
-
-        if (o.getPoints() >= bestPlayer) {
-            result = 1;
-        }
-
-        return result;
+        return (int) (o.getPoints() - points);
     }
 }
