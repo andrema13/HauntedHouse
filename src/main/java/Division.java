@@ -2,7 +2,6 @@ public class Division implements Comparable<Division> {
 
     private int id;
     private String name;
-    private boolean visited;
 
     Division(int id, String name) {
         this.id = id;
@@ -17,18 +16,6 @@ public class Division implements Comparable<Division> {
         return name;
     }
     //endregion
-
-    boolean isVisited() {
-        return this.visited;
-    }
-
-    void visit() {
-        this.visited = true;
-    }
-
-    void unVisit() {
-        this.visited = false;
-    }
 
     @Override
     public String toString() {

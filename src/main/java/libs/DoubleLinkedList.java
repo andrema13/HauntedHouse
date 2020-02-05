@@ -154,17 +154,6 @@ public class DoubleLinkedList<T extends Comparable<T>> implements ListADT<T> {
         return false;
     }
 
-    public T containsTarget(T target) {
-
-        DoubleIterator itr = new DoubleIterator(getHead());
-        while (itr.hasNext()) {
-            if (itr.next() == target) {
-                return itr.next();
-            }
-        }
-        return null;
-    }
-
     @Override
     public boolean isEmpty() {
         return this.count == 0;

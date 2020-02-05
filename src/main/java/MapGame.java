@@ -1,7 +1,4 @@
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import exceptions.ElementNotFoundException;
 import exceptions.EmptyCollectionException;
 import libs.DoubleLinkedOrderedList;
@@ -9,6 +6,9 @@ import libs.Network;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.Scanner;
 
 public class MapGame {
@@ -141,9 +141,14 @@ public class MapGame {
             System.out.println("File not found");
         }
         mapGameInConsole();
-        System.out.println(
-                graph.shortestPathWeight(getDivisionByName("entry"),
-                        getDivisionByName("hall")));
+
+        /*Iterator<Division> it = graph.iteratorShortestPath(getDivisionByName("entry"), getDivisionByName("exit"));
+        while (it.hasNext()) {
+            Division d = it.next();
+            System.out.println(d.getName());
+        }
+
+        System.out.println(graph.shortestPathWeight(getDivisionByName("office"), getDivisionByName("bedroom")));*/
     }
 
     private int getGhostTakenPoints(JsonArray map, String divisionName) {
@@ -220,6 +225,7 @@ public class MapGame {
                         this.graph.getVertex(i).getId())) {
                     System.out.println("MESSAGE: You Won! Congratulations :)");
                     finishScreen();
+                    writeToFile();
                 } else if (!this.graph.checkIfConnectionExits(originId, this.graph.getVertex(i).getId())) {
                     System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
                     moveToAnotherDivision(originId, division);
@@ -234,7 +240,7 @@ public class MapGame {
                 if (this.graph.checkIfConnectionExits(originId,
                         this.graph.getVertex(i).getId())) {
 
-                    player.setPoints(player.getPoints() - this.graph.getAdjMatrix()[originId][i]);
+                    player.setPoints(player.getPoints() - this.graph.getWeightedAdjMatrix()[originId][i]);
                     System.out.println("     *****************************");
                     System.out.println(String.format("%-15s %-45s", " ", "Division"));
                     System.out.println(String.format("%-15s %-42s ", " ",
@@ -247,8 +253,7 @@ public class MapGame {
                     System.out.println("     *****************************");
                     moveToAnotherDivision(division.getId(), getDivisionById(playerChoice));
 
-                } else if (!this.graph.checkIfConnectionExits(division.getId(),
-                        this.graph.getVertex(i).getId())) {
+                } else if (!this.graph.checkIfConnectionExits(division.getId(), this.graph.getVertex(i).getId())) {
                     System.out.println("MESSAGE: Wrong choice. Pick a valid connection!");
                     System.out.println("     *****************************\n");
                     System.out.println(String.format("%-15s %-45s", " ", "Division"));
@@ -274,11 +279,15 @@ public class MapGame {
         }
     }
 
+    /**
+     * Prints the connections possible from the given division
+     *
+     * @param origin to show connections from this divisions
+     */
     private void printConnections(Division origin) {
 
         for (int j = 0; j < this.graph.getNumVertices(); j++) {
-            if (this.graph.checkIfConnectionExits(origin.getId(),
-                    this.graph.getVertex(j).getId())) {
+            if (this.graph.checkIfConnectionExits(origin.getId(), this.graph.getVertex(j).getId())) {
                 System.out.println(this.graph.getVertex(j).toString());
             }
         }
@@ -329,19 +338,41 @@ public class MapGame {
             if (!this.graph.getVertex(i).getName().equals("exit")) {
                 System.out.println("\n***************************************");
                 System.out.println(String.format("%-12s %-35s", " ", "Division"));
-                System.out.println(String.format("%-10s %-20s ", " ", "|" +
+                System.out.println(String.format("%-12s %-20s ", " ", "|" +
                         this.graph.getVertex(i).getName() + "|\n"));
                 System.out.println("  Connections:");
             }
             for (int j = 0; j < this.graph.getNumVertices(); j++) {
-                if (this.graph.getAdjMatrix()[i][j] >= 0) {
+                if (this.graph.getWeightedAdjMatrix()[i][j] != null) {
                     System.out.println(String.format("%-25s %-10s", "  ----->|" +
                                     this.graph.getVertex(j).getName() + "|",
-                            "Ghost: " + this.graph.getAdjMatrix()[i][j]));
+                            "Ghost: " + this.graph.getWeightedAdjMatrix()[i][j]));
                 }
             }
             System.out.println("\n***************************************");
 
+        }
+    }
+
+    protected void writeToFile() {
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+        try {
+            FileWriter fileWriter = new FileWriter("./src/data/" + System.currentTimeMillis() + ".json");
+            gson.toJson(this.playersList, fileWriter);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected void readFromFile(String filePath) {
+        try {
+            this.playersList = new Gson().fromJson(new FileReader(filePath), (Type) getPlayersList());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
