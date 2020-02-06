@@ -1,10 +1,17 @@
 import exceptions.ElementNotFoundException;
 import exceptions.EmptyCollectionException;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
+    /**
+     * Map Game engine
+     */
     private MapGame mapGame;
+    /**
+     * Name to be filled by the user
+     */
     private String playerName;
 
     //region get-set
@@ -17,15 +24,17 @@ public class Main {
     }
     //endregion
 
-    public static void main(String[] args) throws ElementNotFoundException, EmptyCollectionException {
+    public static void main(String[] args) throws ElementNotFoundException, EmptyCollectionException, IOException {
         Main main = new Main();
         main.initGame();
     }
 
-    protected void initGame() throws ElementNotFoundException, EmptyCollectionException {
+
+    protected void initGame() throws ElementNotFoundException, EmptyCollectionException, IOException {
+
+        this.mapGame = new MapGame();
 
         Scanner scanner = new Scanner(System.in);
-        mapGame = new MapGame();
         initialScreen();//init the initial screen
 
         switch (scanner.next()) {
@@ -47,26 +56,22 @@ public class Main {
 
     private void initialScreen() {
         System.out.println("     *****************************");
-        System.out.println("   ");
+        System.out.println("                                ");
         System.out.println("        1- Start New Game       ");
         System.out.println("        2- High Scores          ");
         System.out.println("        0- Exit                 ");
         System.out.println("     *****************************");
     }
 
-    private void newGameScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException {
+    private void newGameScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException, IOException {
         System.out.println("     *****************************");
         System.out.println("     Select Mode:                \n");
-        System.out.println("         1- Simulation Mode     ");
-        System.out.println("         2- Manual Mode         ");
+        System.out.println("         1- Manual Mode         \n");
         System.out.println("         0- Back                ");
         System.out.println("     *****************************");
 
         switch (scanner.next()) {
             case "1":
-                simulationGameScreen();
-                break;
-            case "2":
                 typeNameScreen(scanner);
                 break;
             case "0":
@@ -78,22 +83,15 @@ public class Main {
         }
     }
 
-    private void highScoresScreen() throws ElementNotFoundException, EmptyCollectionException {
+    private void highScoresScreen() throws ElementNotFoundException, EmptyCollectionException, IOException {
         System.out.println("     *****************************");
         System.out.println("     HighScores                   ");
+        mapGame.getHighScores();
         System.out.println("     *****************************");
         initGame();
     }
 
-    private void simulationGameScreen() throws ElementNotFoundException, EmptyCollectionException {
-        System.out.println("     *****************************");
-        System.out.println("     Simulation Mode             \n");
-        mapGame.simulationMode();
-        System.out.println("     *****************************");
-        initGame();
-    }
-
-    private void manualGameScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException {
+    private void manualGameScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException, IOException {
         System.out.println("     *****************************");
         System.out.println("     Manual Mode                 \n");
         System.out.println("         1- Select Level        \n");
@@ -114,7 +112,7 @@ public class Main {
         }
     }
 
-    private void selectLevelScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException {
+    private void selectLevelScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException, IOException {
         System.out.println("     *****************************");
         System.out.println("     Manual Mode                 \n");
         System.out.println("     Select Level:               \n");
@@ -145,24 +143,16 @@ public class Main {
         }
     }
 
-    private void startNewGame(GameLevel gameLevel) throws ElementNotFoundException, EmptyCollectionException {
+    private void startNewGame(GameLevel gameLevel) throws ElementNotFoundException, IOException, EmptyCollectionException {
+        Player player = new Player(getPlayerName(), mapGame.getPlayerPoints());
         mapGame.setGameLevel(gameLevel);
-        mapGame.readFromJSONFile("map.json");
-        mapGame.addNewPlayer(new Player(getPlayerName(), mapGame.getPlayerPoints()));
-        checkIfGameIsValid();
+        mapGame.addNewPlayer(player);
+        mapGame.mapGameInConsole();//shows the map in the console
+        infoGameScreen(player, gameLevel);
+        mapGame.startingPoint();
     }
 
-    private void checkIfGameIsValid() throws ElementNotFoundException, EmptyCollectionException {
-        if (mapGame.getPlayerPoints() <= 0) {
-            System.out.println("Player Points is lower or equals to 0");
-            initGame();
-        } else {
-            infoGameScreen(mapGame.getPlayersList().first(), mapGame.getGameLevel());
-            mapGame.startingPoint();
-        }
-    }
-
-    private void typeNameScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException {
+    private void typeNameScreen(Scanner scanner) throws ElementNotFoundException, EmptyCollectionException, IOException {
         System.out.println("     *****************************");
         System.out.println("     Manual Mode ");
         System.out.println("     Type your name: ");

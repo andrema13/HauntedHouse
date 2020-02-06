@@ -11,7 +11,7 @@ public interface NetworkADT<T> extends GraphADT<T> {
      * @param vertex2 the second vertex
      * @param weight  the weight
      */
-    public void addEdge(T vertex1, T vertex2, double weight);
+    void addEdge(T vertex1, T vertex2, double weight);
 
     /**
      * Returns the weight of the shortest path in this network.
@@ -20,5 +20,5 @@ public interface NetworkADT<T> extends GraphADT<T> {
      * @param vertex2 the second vertex
      * @return the weight of the shortest path in this network
      */
-    public double shortestPathWeight(T vertex1, T vertex2);
+    double shortestPathWeight(T vertex1, T vertex2);
 }

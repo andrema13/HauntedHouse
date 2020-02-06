@@ -36,8 +36,8 @@ public class Graph<T> implements GraphADT<T> {
         return adjMatrix;
     }
 
-    public T[] getVertices() {
-        return (T[]) vertices;
+    public T getVertex(int index) {
+        return (T) vertices[index];
     }
 
     //endregion
@@ -72,7 +72,7 @@ public class Graph<T> implements GraphADT<T> {
      * @param vertex to be tested
      * @return an int
      */
-    private int getIndex(T vertex) {
+    protected int getIndex(T vertex) {
 
         try {
             for (int i = 0; i < vertices.length; i++) {
@@ -149,7 +149,7 @@ public class Graph<T> implements GraphADT<T> {
                     }
                 }
             } catch (Exception ex) {
-                //TODO
+
             }
         }
         return resultList.iterator();
@@ -238,7 +238,7 @@ public class Graph<T> implements GraphADT<T> {
      * @param targetIndex final vertex
      * @return an iterator
      */
-    protected Iterator<Integer> iteratorShortestPathIndices(int startIndex, int targetIndex) {
+    private Iterator<Integer> iteratorShortestPathIndices(int startIndex, int targetIndex) {
 
         int index = startIndex;
         int[] pathLength = new int[numVertices];
@@ -278,7 +278,7 @@ public class Graph<T> implements GraphADT<T> {
                     }
                 }
             } catch (Exception ex) {
-                //TODO
+
             }
         }
         if (index != targetIndex) // no path must have been found
@@ -354,7 +354,7 @@ public class Graph<T> implements GraphADT<T> {
      * @param index1 to be tested
      * @return a boolean
      */
-    private boolean indexIsValid(int index1) {
+    protected boolean indexIsValid(int index1) {
         return ((index1 < numVertices) && (index1 >= 0));
     }
 
@@ -419,10 +419,6 @@ public class Graph<T> implements GraphADT<T> {
                 }
             }
         }
-    }
-
-    public boolean checkIfConnectionExits(int connection1, int connection2) {
-        return this.adjMatrix[connection1][connection2];
     }
 
     public String toString() {

@@ -2,10 +2,10 @@ package libs;
 
 import interfaces.OrderedListADT;
 
-public class ArrayOrderedList<T extends Comparable<T>> extends ArrayList<T> implements OrderedListADT<T> {
+public class ArrayOrderedList<T> extends ArrayList<T> implements OrderedListADT<T> {
 
-    ArrayOrderedList() {
-        setList(getList());
+    public ArrayOrderedList() {
+        super();
     }
 
     @Override
@@ -22,7 +22,8 @@ public class ArrayOrderedList<T extends Comparable<T>> extends ArrayList<T> impl
                 setModCount(getModCount() + 1);
             } else {
                 // Insere na ultima posição disponivel quando é superior ao ultimo elemento do array
-                if (element.compareTo(getList()[getLength() - 1]) > 0) {
+                Comparable<T> comparableElement = (Comparable<T>) element;
+                if (comparableElement.compareTo(getList()[getLength() - 1]) > 0) {
                     getList()[getLength()] = element;
                     setLength(getLength() + 1);
                     setModCount(getModCount() + 1);
@@ -31,7 +32,7 @@ public class ArrayOrderedList<T extends Comparable<T>> extends ArrayList<T> impl
                 else {
                     boolean inserted = false;
                     for (int i = 0; i < getLength(); i++) {
-                        if (element.compareTo(getList()[i]) < 0 && !inserted) {
+                        if (comparableElement.compareTo(getList()[i]) < 0 && !inserted) {
                             //array temporario para ficar com os elementos ordenados da direita do elemento a adicionar
                             T[] temp = (T[]) new Comparable[getDefaultCapacity()];
                             for (int j = i; j < getLength(); j++) {
@@ -40,8 +41,8 @@ public class ArrayOrderedList<T extends Comparable<T>> extends ArrayList<T> impl
                             //adiciona o elemento na posiçao correta
                             getList()[i] = element;
                             //copia para o array original os elementos que estavam no array temp
-                            for(int k = i; k < getLength(); k++){
-                                getList()[k+1] = temp[k];
+                            for (int k = i; k < getLength(); k++) {
+                                getList()[k + 1] = temp[k];
                             }
                             //aumenta o tamanho
                             setLength(getLength() + 1);
@@ -55,5 +56,4 @@ public class ArrayOrderedList<T extends Comparable<T>> extends ArrayList<T> impl
             throw new UnsupportedOperationException();
         }
     }
-
 }
